@@ -1,3 +1,143 @@
-<p>run1</p>
-<p>我是？？，这是一个测试。 </p>
-<p>看到此行即为成功</p>
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+ 
+    #signatureArea {
+      width: 100%;
+      height: 300px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+ 
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+ 
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div id="signatureArea"></div>
+  <button id="clearButton">清除</button>
+  <button id="saveButton">保存签名</button>
+ 
+  <script type="text/javascript">
+// 获取DOM元素
+var signatureArea = document.getElementById('signatureArea');
+var clearButton = document.getElementById('clearButton');
+var saveButton = document.getElementById('saveButton');
+ 
+// 定义变量
+var isDrawing = false; // 是否正在绘制
+var lastX, lastY; // 上一个触摸点的坐标
+ 
+// 创建两个canvas元素
+var drawingCanvas = document.createElement('canvas'); // 用于绘制签名
+var backgroundCanvas = document.createElement('canvas'); // 用于保存带有白色背景的签名图像
+var drawingCtx = drawingCanvas.getContext('2d');
+var backgroundCtx = backgroundCanvas.getContext('2d');
+drawingCanvas.width = signatureArea.offsetWidth;
+drawingCanvas.height = signatureArea.offsetHeight;
+backgroundCanvas.width = drawingCanvas.width;
+backgroundCanvas.height = drawingCanvas.height;
+ 
+// 绑定触摸事件
+signatureArea.addEventListener('touchstart', startDrawing);
+signatureArea.addEventListener('touchmove', draw);
+signatureArea.addEventListener('touchend', stopDrawing);
+clearButton.addEventListener('click', clearSignature);
+saveButton.addEventListener('click', saveSignature);
+ 
+// 开始绘制
+function startDrawing(e) {
+  e.preventDefault();
+  var touch = e.touches[0];
+  var rect = signatureArea.getBoundingClientRect();
+  lastX = touch.clientX - rect.left;
+  lastY = touch.clientY - rect.top;
+  isDrawing = true;
+}
+ 
+// 绘制中
+function draw(e) {
+  if (!isDrawing) return;
+  var touch = e.touches[0];
+  var rect = signatureArea.getBoundingClientRect();
+  var x = touch.clientX - rect.left;
+  var y = touch.clientY - rect.top;
+  drawLine(lastX, lastY, x, y);
+  lastX = x;
+  lastY = y;
+}
+ 
+// 停止绘制
+function stopDrawing() {
+  isDrawing = false;
+}
+ 
+// 绘制实线
+function drawLine(x1, y1, x2, y2) {
+  drawingCtx.beginPath();
+  drawingCtx.moveTo(x1, y1);
+  drawingCtx.lineTo(x2, y2);
+  drawingCtx.lineWidth = 1;
+  drawingCtx.strokeStyle = '#000';
+  drawingCtx.stroke();
+}
+ 
+// 清除签名
+function clearSignature() {
+  drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+  backgroundCtx.clearRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+}
+ 
+// 保存签名
+function saveSignature() {
+  // 绘制白色背景
+  backgroundCtx.fillStyle = 'white';
+  backgroundCtx.fillRect(0, 0, backgroundCanvas.width, backgroundCanvas.height);
+ 
+  // 复制绘制的签名到带有白色背景的画布
+  backgroundCtx.drawImage(drawingCanvas, 0, 0);
+ 
+  // 将带有白色背景的画布内容转为PNG格式的DataURL
+  var dataURL = backgroundCanvas.toDataURL("image/png");
+ 
+  // 创建一个链接元素并设置下载属性
+  var link = document.createElement('a');
+  link.href = dataURL;
+  link.download = '签名.png'; // 设置下载文件的名称
+ 
+  // 检查是否支持保存到相册
+  if ("download" in link) {
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } else {
+    // 如果不支持保存到相册，你可以提供其他方式或提示用户手动保存
+    alert("无法直接保存到相册，请手动保存签名图片。");
+  }
+}
+ 
+// 将canvas元素插入DOM树中
+signatureArea.appendChild(drawingCanvas);
+ 
+  </script>
+</body>
+</html>
